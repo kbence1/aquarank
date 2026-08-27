@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { addArchivedResult, addEvent, addResult, deleteArchivedEvent, deleteResult, getEvents, placeBracketSlot, seedBracket, setBracketStartTime, setOfficialStatus, updateArchivedEvent, updateArchivedResult } from "../../lib/data";
+import { setLiveBrackets, addArchivedResult, addEvent, addResult, deleteArchivedEvent, deleteResult, getEvents, placeBracketSlot, seedBracket, setBracketStartTime, setOfficialStatus, updateArchivedEvent, updateArchivedResult } from "../../lib/data";
 import { adminCookie, adminToken, isAdmin } from "../../lib/adminAuth";
 import { deleteArchivePdf } from "../../lib/archiveFiles";
 
@@ -15,6 +15,7 @@ export async function POST(req: Request) {
   }
   if (!(await isAdmin(req))) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   try {
+    if (b.action === "setLiveBrackets") { if (!Array.isArray(b.eventIds)) throw new Error("Select knockout brackets"); await setLiveBrackets(b.eventIds.map(Number)); }
     if (b.action === "addArchivedResult") await addArchivedResult({ eventId: Number(b.eventId), athlete: String(b.athlete || ""), club: String(b.club || ""), time: String(b.time || ""), points: Number(b.points) });
     if (b.action === "addResult") await addResult({ eventId: Number(b.eventId), athlete: String(b.athlete || ""), club: String(b.club || ""), time: String(b.time || "").replace(/\..*$/, "").slice(0, 5), points: Number(b.points) });
     if (b.action === "addEvent") await addEvent({ title: String(b.title || ""), category: String(b.category || ""), location: String(b.location || ""), eventDate: String(b.eventDate || ""), nextStart: String(b.nextStart || ""), eventType: String(b.eventType || "standard"), bracketSize: Number(b.bracketSize || 0) });
